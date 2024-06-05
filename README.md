@@ -1,2 +1,2 @@
-# gpu_monitor_lite
+# gpustat_lite
 Lightweight NVIDIA GPU monitoring tool
