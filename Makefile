@@ -25,7 +25,7 @@ CFLAGS += -Wall -Wextra -O2 -march=native -mtune=native -flto -funroll-loops
 TARGET = gpustat_lite
 
 # Source files
-SRCS = main.c
+SRCS = ./src/main.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
