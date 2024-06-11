@@ -46,7 +46,7 @@ int main(int argc, char *argv[]) {
     int gpu_id = -1;
     int interval = 1;
 
-    while ((opt = getopt(argc, argv, "i:n:")) != -1) {
+    while ((opt = getopt(argc, argv, "i:n:h")) != -1) {
         switch (opt) {
             case 'i':
                 gpu_id = atoi(optarg);
@@ -54,8 +54,13 @@ int main(int argc, char *argv[]) {
             case 'n':
                 interval = atoi(optarg);
                 break;
+            case 'h':
             default:
-                fprintf(stderr, "Usage: %s [-i gpu_id] [-n interval]\n", argv[0]);
+                fprintf(stderr, "Usage: %s [options] command\n", argv[0]);
+                fprintf(stderr, "Options:\n");
+                fprintf(stderr, "  -i Target GPU IDs\n");
+                fprintf(stderr, "  -n seconds to wait between updates\n");
+                fprintf(stderr, "  -h show this help\n");
                 exit(EXIT_FAILURE);
         }
     }
