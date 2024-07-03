@@ -18,12 +18,10 @@ void handleError(nvmlReturn_t result) {
 }
 
 void displayDeviceInfo(nvmlDevice_t device, int id, int index) { //, int cap, int tot_mem) {
-    char name[NVML_DEVICE_NAME_BUFFER_SIZE];
     nvmlMemory_t memory;
     nvmlUtilization_t utilization;
     unsigned int pwr;
 
-    handleError(nvmlDeviceGetName(device, name, sizeof(name)));
     handleError(nvmlDeviceGetMemoryInfo(device, &memory));
     handleError(nvmlDeviceGetUtilizationRates(device, &utilization));
     handleError(nvmlDeviceGetPowerUsage(device, &pwr));
@@ -36,6 +34,27 @@ void displayDeviceInfo(nvmlDevice_t device, int id, int index) { //, int cap, in
            //tot_mem,
            utilization.gpu
            );
+}
+
+void displayDeviceInfo_horizontal(int n, nvmlDevice_t* device, int* id) {
+    nvmlMemory_t memory;
+    nvmlUtilization_t utilization;
+    unsigned int pwr;
+
+    int i = 0;
+    for(i = 0; i < n; i++) {
+        handleError(nvmlDeviceGetMemoryInfo(device[i], &memory));
+        handleError(nvmlDeviceGetUtilizationRates(device[i], &utilization));
+        handleError(nvmlDeviceGetPowerUsage(device[i], &pwr));
+
+        printw("G%d, %u W, %d MiB, %u%%",
+           id[i],
+           pwr/1000,
+           (int) (memory.used / 1024 /1024),
+           utilization.gpu
+           );
+        if ( i != n-1 ) printw(" | ");
+    }
 }
 
 void clearScreen() {
@@ -63,7 +82,7 @@ void parse_gpu_ids(char* optarg, int* gpus, unsigned int* gpu_count) {
     unsigned int i,j;
     for (i = 0; i < temp_count; i++) {
         for (j = 0; j < *gpu_count; j++) {
-            if (gpus[j] == temp_gpus[i]) 
+            if (gpus[j] == temp_gpus[i])
                 break;
         }
         if (j == *gpu_count) {
@@ -82,12 +101,13 @@ int main(int argc, char *argv[]) {
     unsigned selected_device_count;
     int interval = 1;
     bool selected = false;
+    bool is_vertical = true;
 
     handleError(nvmlInit());
     handleError(nvmlDeviceGetCount(&device_count));
     selected_device_count = device_count;
 
-    while ((opt = getopt(argc, argv, "i:n:h")) != -1) {
+    while ((opt = getopt(argc, argv, "i:n:hl")) != -1) {
         switch (opt) {
             case 'i':
                 parse_gpu_ids(optarg, gpu_ids, &selected_device_count);
@@ -96,13 +116,17 @@ int main(int argc, char *argv[]) {
             case 'n':
                 interval = atoi(optarg);
                 break;
+            case 'l':
+                is_vertical = false;
+                break;
             case 'h':
             default:
                 fprintf(stderr, "Usage: %s [options] command\n", argv[0]);
                 fprintf(stderr, "Options:\n");
                 fprintf(stderr, "  -i Target GPU IDs\n");
                 fprintf(stderr, "  -n seconds to wait between updates\n");
-                fprintf(stderr, "  -h show this help\n");
+                fprintf(stderr, "  -l Display GPU status in a single horizontal line\n");
+                fprintf(stderr, "  -h Show this help\n");
                 exit(EXIT_FAILURE);
         }
     }
@@ -134,11 +158,16 @@ int main(int argc, char *argv[]) {
     while (1) {
         clearScreen();
 
-        // print device info line by line
-        for(i = 0; i < selected_device_count; i++) {
-            displayDeviceInfo(device[i], gpu_ids[i], i);
+        if (is_vertical) {
+            // print device info line by line
+            for(i = 0; i < selected_device_count; i++) {
+                displayDeviceInfo(device[i], gpu_ids[i], i);
+            }
         }
-
+        else {
+            displayDeviceInfo_horizontal(selected_device_count, device, gpu_ids);
+        }
+        
         refresh();
         sleep(interval);
 
