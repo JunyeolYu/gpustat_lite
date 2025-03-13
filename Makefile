@@ -22,13 +22,16 @@ endif
 # Compiler flags
 CFLAGS += -Wall -Wextra -O2 -march=native -mtune=native -flto -funroll-loops
 # Target executable
-TARGET = gpustat_lite
+TARGET = gpulite
 
 # Source files
 SRCS = ./src/main.c
 
 # Object files
 OBJS = $(SRCS:.c=.o)
+
+# Installation directory
+INSTALL_DIR = /usr/local/bin
 
 # Default target
 all: $(TARGET) clean_obj
@@ -52,4 +55,13 @@ clean_obj:
 run: $(TARGET)
 	./$(TARGET)
 
-.PHONY: all clean run
+# Install target
+install: $(TARGET)
+	install -m 755 $(TARGET) $(INSTALL_DIR)
+
+# Uninstall target
+uninstall:
+	rm -f $(INSTALL_DIR)/$(TARGET)
+
+.PHONY: all clean run install uninstall
+
