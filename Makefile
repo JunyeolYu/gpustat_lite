@@ -33,8 +33,8 @@ OBJS = $(SRCS:.c=.o)
 # Installation directory
 INSTALL_DIR = /usr/local/bin
 
-# Default target
-all: $(TARGET) clean_obj
+# Default target (install will be executed automatically)
+all: install clean_obj
 
 # Rule for building the target
 $(TARGET): $(OBJS)
@@ -55,7 +55,7 @@ clean_obj:
 run: $(TARGET)
 	./$(TARGET)
 
-# Install target
+# Install target (executed by default)
 install: $(TARGET)
 	install -m 755 $(TARGET) $(INSTALL_DIR)
 
