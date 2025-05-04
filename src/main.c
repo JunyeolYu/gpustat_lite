@@ -7,6 +7,7 @@
 
 #define MAX_GPUS 8
 #define MAX_ITEMS 100
+#define NVML_DEVICE_NAME_BUFFER_SIZE 64
 
 void handleError(nvmlReturn_t result) {
     if (NVML_SUCCESS != result) {
@@ -28,6 +29,25 @@ void displayDeviceInfo(nvmlDevice_t device, int id, int index) { //, int cap, in
 
     mvprintw(index, 0, "G%d | %3u W | %5d MiB | %3u%%\n",
            id,
+           pwr/1000,
+           //cap,
+           (int) (memory.used / 1024 /1024),
+           //tot_mem,
+           utilization.gpu
+           );
+}
+
+void displayDeviceInfo_name(nvmlDevice_t device, int index, char* name) { //, int cap, int tot_mem) {
+    nvmlMemory_t memory;
+    nvmlUtilization_t utilization;
+    unsigned int pwr;
+
+    handleError(nvmlDeviceGetMemoryInfo(device, &memory));
+    handleError(nvmlDeviceGetUtilizationRates(device, &utilization));
+    handleError(nvmlDeviceGetPowerUsage(device, &pwr));
+
+    mvprintw(index, 0, "%.10s | %3u W | %5d MiB | %3u%%\n",
+           name,
            pwr/1000,
            //cap,
            (int) (memory.used / 1024 /1024),
@@ -102,6 +122,7 @@ int main(int argc, char *argv[]) {
     int interval = 1;
     bool selected = false;
     bool is_vertical = true;
+    char** names= NULL;
 
     handleError(nvmlInit());
     handleError(nvmlDeviceGetCount(&device_count));
@@ -147,9 +168,13 @@ int main(int argc, char *argv[]) {
     }
 
     // get device handles
+    names = (char**)malloc(sizeof(char*) * selected_device_count);
     for(i = 0; i < selected_device_count; i++) {
         handleError(nvmlDeviceGetHandleByIndex(gpu_ids[i], &device[i]));
-    }
+        names[i] = (char*)malloc(NVML_DEVICE_NAME_BUFFER_SIZE * sizeof(char));
+        handleError(nvmlDeviceGetName(device[i], names[i], NVML_DEVICE_NAME_BUFFER_SIZE));
+        //FIXME: remove "NVIDIA" tag
+     }
 
     initscr();
     nodelay(stdscr, TRUE);
@@ -161,7 +186,7 @@ int main(int argc, char *argv[]) {
         if (is_vertical) {
             // print device info line by line
             for(i = 0; i < selected_device_count; i++) {
-                displayDeviceInfo(device[i], gpu_ids[i], i);
+                displayDeviceInfo_name(device[i], i, names[i]);
             }
         }
         else {
